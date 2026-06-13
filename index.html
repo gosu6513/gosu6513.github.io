@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한·중·일 통합 공휴일 달력</title>
+<style>
+:root{
+  --kr:#e0453c; --cn:#e3a008; --jp:#2f6fed;
+  --kr-bg:#fdeceb; --cn-bg:#fcf3d9; --jp-bg:#e9f0fe;
+  --ink:#1f2430; --sub:#6b7280; --line:#e7e9ee; --bg:#f6f7f9; --card:#fff;
+  --ov2:#fff4e6; --ov3:#ffe1e1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 60px}
+header h1{font-size:25px;font-weight:800;letter-spacing:-.5px}
+header p{color:var(--sub);font-size:14px;margin-top:4px}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:20px 0 14px;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.nav{display:flex;align-items:center;gap:6px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:9px;
+  padding:7px 12px;color:var(--ink);transition:.15s}
+button:hover{background:#f0f2f5}
+button:disabled{opacity:.5;cursor:default}
+.title-now{font-size:18px;font-weight:700;min-width:130px;text-align:center}
+select{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.spacer{flex:1}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;
+  border:1px solid var(--line);font-size:13px;cursor:pointer;user-select:none;background:#fff}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.chip.off{opacity:.35}
+.chip.kr .dot{background:var(--kr)} .chip.cn .dot{background:var(--cn)} .chip.jp .dot{background:var(--jp)}
+.syncbar{display:flex;align-items:center;gap:12px;margin:0 2px 14px;flex-wrap:wrap}
+.sync-status{font-size:12.5px;color:var(--sub)}
+.sync-status.ok{color:#1a7f37} .sync-status.warn{color:#9a6b00} .sync-status.busy{color:#2f6fed}
+.grid{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);background:#fafbfc;border-bottom:1px solid var(--line)}
+.dow div{padding:10px 0;text-align:center;font-size:12px;font-weight:700;color:var(--sub)}
+.dow div:first-child{color:var(--kr)} .dow div:last-child{color:var(--jp)}
+.days{display:grid;grid-template-columns:repeat(7,1fr)}
+.cell{min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:6px 7px;position:relative;transition:.12s}
+.cell:nth-child(7n){border-right:none}
+.cell.blank{background:#fcfcfd}
+.cell.today{outline:2px solid var(--ink);outline-offset:-2px}
+.cell.ov2{background:var(--ov2)} .cell.ov3{background:var(--ov3)}
+.cell.has{cursor:pointer} .cell.has:hover{filter:brightness(.97)}
+.daynum{font-size:13px;font-weight:600;color:var(--ink)}
+.cell.sun .daynum{color:var(--kr)} .cell.sat .daynum{color:var(--jp)}
+.lunar-ribbon{position:absolute;top:6px;right:7px;font-size:10px;color:#fff;background:#c0392b;
+  padding:1px 5px;border-radius:6px;display:none}
+.cell.ov3 .lunar-ribbon{display:block}
+.badges{margin-top:5px;display:flex;flex-direction:column;gap:3px}
+.bd{font-size:10.5px;line-height:1.25;padding:2px 5px;border-radius:5px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd.kr{background:var(--kr-bg);color:var(--kr)} .bd.cn{background:var(--cn-bg);color:#9a6b00}
+.bd.jp{background:var(--jp-bg);color:var(--jp)}
+.flag{font-weight:800;margin-right:2px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 2px;font-size:13px;color:var(--sub)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.08)}
+.panel{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.panel h2{font-size:16px;font-weight:800;margin-bottom:4px}
+.panel .hint{color:var(--sub);font-size:13px;margin-bottom:14px}
+.ovitem{display:flex;align-items:center;gap:12px;padding:9px 6px;border-bottom:1px dashed var(--line);font-size:14px;cursor:pointer}
+.ovitem:last-child{border-bottom:none}
+.ovitem:hover{background:#f7f8fa}
+.ovdate{font-weight:700;min-width:120px}
+.ovtag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.ovtag.t3{background:var(--ov3);color:#b32020} .ovtag.t2{background:var(--ov2);color:#9a6b00}
+.ovnames{color:var(--sub);font-size:12.5px;flex:1}
+.mini{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px}
+footer{margin-top:30px;color:var(--sub);font-size:12px;line-height:1.7}
+.tabs{display:flex;gap:6px}
+.tab{padding:7px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer}
+.tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+#listView{display:none}
+table.lst{width:100%;border-collapse:collapse;font-size:13px}
+table.lst th,table.lst td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.lst th{background:#fafbfc;position:sticky;top:0;font-size:12px;color:var(--sub)}
+.lst .c-kr{color:var(--kr)} .lst .c-cn{color:#9a6b00} .lst .c-jp{color:var(--jp)}
+@media(max-width:640px){
+  .wrap{padding:16px 10px 50px}
+  header h1{font-size:20px}
+  .cell{min-height:58px;padding:4px 3px}
+  .daynum{font-size:12px}
+  .badges{flex-direction:row;flex-wrap:wrap;gap:3px;margin-top:4px}
+  .bd{font-size:0;line-height:0;width:10px;height:10px;padding:0;border-radius:50%;border:1px solid rgba(0,0,0,.06)}
+  .flag{display:none}
+  .lunar-ribbon{display:none!important}
+  .cell.ov3{box-shadow:inset 0 0 0 2px var(--kr)}
+  .ovdate{min-width:84px;font-size:12px} .title-now{min-width:88px;font-size:16px}
+  .toolbar{gap:8px;padding:10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🗓️ 한·중·일 통합 공휴일 달력</h1>
+    <p>일본 여행 계획용 · 3국 공휴일과 <b>겹침(혼잡 주의)</b> 한눈에 보기</p>
+  </header>
+  <div class="toolbar">
+    <div class="nav">
+      <button onclick="move(-1)">‹ 이전</button>
+      <div class="title-now" id="titleNow"></div>
+      <button onclick="move(1)">다음 ›</button>
+      <button onclick="goToday()">오늘</button>
+    </div>
+    <select id="yearSel" onchange="jumpYear(this.value)"></select>
+    <div class="spacer"></div>
+    <div class="filters">
+      <span class="chip kr" data-c="KR" onclick="toggle('KR',this)"><span class="dot"></span>🇰🇷 한국</span>
+      <span class="chip cn" data-c="CN" onclick="toggle('CN',this)"><span class="dot"></span>🇨🇳 중국</span>
+      <span class="chip jp" data-c="JP" onclick="toggle('JP',this)"><span class="dot"></span>🇯🇵 일본</span>
+    </div>
+  </div>
+  <div class="syncbar">
+    <button id="syncBtn" onclick="refreshFromWeb(true)">🔄 웹에서 최신 데이터 갱신</button>
+    <span id="syncStatus" class="sync-status">자동 갱신 확인 중…</span>
+  </div>
+  <div class="tabs" style="margin-bottom:12px">
+    <div class="tab active" id="tabCal" onclick="setView('cal')">달력 보기</div>
+    <div class="tab" id="tabList" onclick="setView('list')">목록 보기</div>
+  </div>
+  <div id="calView">
+    <div class="grid">
+      <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+      <div class="days" id="days"></div>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--kr-bg);border-color:var(--kr)"></span>한국</span>
+      <span><span class="sw" style="background:var(--cn-bg);border-color:var(--cn)"></span>중국</span>
+      <span><span class="sw" style="background:var(--jp-bg);border-color:var(--jp)"></span>일본</span>
+      <span><span class="sw" style="background:var(--ov2)"></span>2개국 겹침</span>
+      <span><span class="sw" style="background:var(--ov3)"></span>3개국 겹침</span>
+    </div>
+  </div>
+  <div id="listView">
+    <div class="grid" style="padding:4px 8px;max-height:640px;overflow:auto">
+      <table class="lst">
+        <thead><tr><th>날짜</th><th>요일</th><th class="c-kr">🇰🇷 한국</th><th class="c-cn">🇨🇳 중국</th><th class="c-jp">🇯🇵 일본</th><th>겹침</th></tr></thead>
+        <tbody id="lstBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>⚠️ 겹침(혼잡 주의) 일정 — 향후 순</h2>
+    <p class="hint">중국·한국의 공휴일이 일본 공휴일 또는 서로 겹치는 날입니다. 이 시기는 항공·숙박이 비싸고 관광지가 붐빌 수 있어요. 클릭하면 해당 월로 이동합니다.</p>
+    <div id="ovList"></div>
+  </div>
+  <footer>
+    <div id="metaNote"></div>
+    <div>🔄 <b>라이브 데이터</b>: 접속할 때마다 브라우저가 Nager.Date에서 한·중·일 공휴일을 받아와 화면 전체를 최신 웹 데이터로 교체합니다. 인터넷이 없을 때만 내장 데이터로 표시됩니다.</div>
+    <div>색상: 🔴 한국 · 🟡 중국 · 🔵 일본 &nbsp;|&nbsp; 음력 기반(설/춘절·추석/중추절 등)은 해마다 양력 날짜가 달라집니다.</div>
+    <div>※ 라이브 모드는 웹 소스(Nager.Date) 기준입니다. 출처 특성상 중국 황금연휴의 연속 휴무·조정근무일이 단순화될 수 있습니다. (오프라인 시 내장 추정값 표시)</div>
+  </footer>
+</div>
+<script>
+const DB = {"meta": {"generated": "2026-06-13T18:18:17", "range": "2025-2030", "note": "일본=법률계산(정확) / 한국=공식+음력+대체공휴일 / 중국 2025-2026=국무원확정, 2027-2030=표준추정"}, "days": {"2025-01-01": {"KR": ["신정"], "CN": ["元旦 (신정)"], "JP": ["元日 (신정)"], "overlap": 3}, "2025-01-13": {"KR": [], "CN": [], "JP": ["成人の日 (성년의 날)"], "overlap": 1}, "2025-01-28": {"KR": ["설날 연휴"], "CN": ["春节 (춘절)"], "JP": [], "overlap": 2}, "2025-01-29": {"KR": ["설날 연휴", "설날"], "CN": ["春节 (춘절)"], "JP": [], "overlap": 2}, "2025-01-30": {"KR": ["설날 연휴"], "CN": ["春节 (춘절)"], "JP": [], "overlap": 2}, "2025-01-31": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2025-02-01": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2025-02-02": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2025-02-03": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2025-02-04": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2025-02-11": {"KR": [], "CN": [], "JP": ["建国記念の日 (건국기념일)"], "overlap": 1}, "2025-02-23": {"KR": [], "CN": [], "JP": ["天皇誕生日 (천황탄생일)"], "overlap": 1}, "2025-02-24": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2025-03-01": {"KR": ["삼일절"], "CN": [], "JP": [], "overlap": 1}, "2025-03-03": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2025-03-20": {"KR": [], "CN": [], "JP": ["春分の日 (춘분)"], "overlap": 1}, "2025-04-04": {"KR": [], "CN": ["清明节 (청명)"], "JP": [], "overlap": 1}, "2025-04-05": {"KR": [], "CN": ["清明节 (청명)"], "JP": [], "overlap": 1}, "2025-04-06": {"KR": [], "CN": ["清明节 (청명)"], "JP": [], "overlap": 1}, "2025-04-29": {"KR": [], "CN": [], "JP": ["昭和の日 (쇼와의 날)"], "overlap": 1}, "2025-05-01": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": [], "overlap": 1}, "2025-05-02": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": [], "overlap": 1}, "2025-05-03": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": ["憲法記念日 (헌법기념일)"], "overlap": 2}, "2025-05-04": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": ["みどりの日 (녹색의 날)"], "overlap": 2}, "2025-05-05": {"KR": ["어린이날", "부처님오신날"], "CN": ["劳动节 (노동절)"], "JP": ["こどもの日 (어린이날)"], "overlap": 3}, "2025-05-06": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2025-05-31": {"KR": [], "CN": ["端午节 (단오)"], "JP": [], "overlap": 1}, "2025-06-01": {"KR": [], "CN": ["端午节 (단오)"], "JP": [], "overlap": 1}, "2025-06-02": {"KR": [], "CN": ["端午节 (단오)"], "JP": [], "overlap": 1}, "2025-06-06": {"KR": ["현충일"], "CN": [], "JP": [], "overlap": 1}, "2025-07-21": {"KR": [], "CN": [], "JP": ["海の日 (바다의 날)"], "overlap": 1}, "2025-08-11": {"KR": [], "CN": [], "JP": ["山の日 (산의 날)"], "overlap": 1}, "2025-08-15": {"KR": ["광복절"], "CN": [], "JP": [], "overlap": 1}, "2025-09-15": {"KR": [], "CN": [], "JP": ["敬老の日 (경로의 날)"], "overlap": 1}, "2025-09-23": {"KR": [], "CN": [], "JP": ["秋分の日 (추분)"], "overlap": 1}, "2025-10-01": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2025-10-02": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2025-10-03": {"KR": ["개천절"], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 2}, "2025-10-04": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2025-10-05": {"KR": ["추석 연휴"], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 2}, "2025-10-06": {"KR": ["추석 연휴", "추석"], "CN": ["中秋节·国庆节 (중추절·국경절)"], "JP": [], "overlap": 2}, "2025-10-07": {"KR": ["추석 연휴"], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 2}, "2025-10-08": {"KR": ["대체공휴일"], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 2}, "2025-10-09": {"KR": ["한글날"], "CN": [], "JP": [], "overlap": 1}, "2025-10-13": {"KR": [], "CN": [], "JP": ["スポーツの日 (스포츠의 날)"], "overlap": 1}, "2025-11-03": {"KR": [], "CN": [], "JP": ["文化の日 (문화의 날)"], "overlap": 1}, "2025-11-23": {"KR": [], "CN": [], "JP": ["勤労感謝の日 (근로감사의 날)"], "overlap": 1}, "2025-11-24": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2025-12-25": {"KR": ["성탄절"], "CN": [], "JP": [], "overlap": 1}, "2026-01-01": {"KR": ["신정"], "CN": ["元旦 (신정)"], "JP": ["元日 (신정)"], "overlap": 3}, "2026-01-02": {"KR": [], "CN": ["元旦 (신정)"], "JP": [], "overlap": 1}, "2026-01-03": {"KR": [], "CN": ["元旦 (신정)"], "JP": [], "overlap": 1}, "2026-01-12": {"KR": [], "CN": [], "JP": ["成人の日 (성년의 날)"], "overlap": 1}, "2026-02-11": {"KR": [], "CN": [], "JP": ["建国記念の日 (건국기념일)"], "overlap": 1}, "2026-02-15": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2026-02-16": {"KR": ["설날 연휴"], "CN": ["春节 (춘절)"], "JP": [], "overlap": 2}, "2026-02-17": {"KR": ["설날 연휴", "설날"], "CN": ["春节 (춘절)"], "JP": [], "overlap": 2}, "2026-02-18": {"KR": ["설날 연휴"], "CN": ["春节 (춘절)"], "JP": [], "overlap": 2}, "2026-02-19": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2026-02-20": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2026-02-21": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2026-02-22": {"KR": [], "CN": ["春节 (춘절)"], "JP": [], "overlap": 1}, "2026-02-23": {"KR": [], "CN": ["春节 (춘절)"], "JP": ["天皇誕生日 (천황탄생일)"], "overlap": 2}, "2026-03-01": {"KR": ["삼일절"], "CN": [], "JP": [], "overlap": 1}, "2026-03-02": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2026-03-20": {"KR": [], "CN": [], "JP": ["春分の日 (춘분)"], "overlap": 1}, "2026-04-04": {"KR": [], "CN": ["清明节 (청명)"], "JP": [], "overlap": 1}, "2026-04-05": {"KR": [], "CN": ["清明节 (청명)"], "JP": [], "overlap": 1}, "2026-04-06": {"KR": [], "CN": ["清明节 (청명)"], "JP": [], "overlap": 1}, "2026-04-29": {"KR": [], "CN": [], "JP": ["昭和の日 (쇼와의 날)"], "overlap": 1}, "2026-05-01": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": [], "overlap": 1}, "2026-05-02": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": [], "overlap": 1}, "2026-05-03": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": ["憲法記念日 (헌법기념일)"], "overlap": 2}, "2026-05-04": {"KR": [], "CN": ["劳动节 (노동절)"], "JP": ["みどりの日 (녹색의 날)"], "overlap": 2}, "2026-05-05": {"KR": ["어린이날"], "CN": ["劳动节 (노동절)"], "JP": ["こどもの日 (어린이날)"], "overlap": 3}, "2026-05-06": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2026-05-24": {"KR": ["부처님오신날"], "CN": [], "JP": [], "overlap": 1}, "2026-05-25": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2026-06-06": {"KR": ["현충일"], "CN": [], "JP": [], "overlap": 1}, "2026-06-19": {"KR": [], "CN": ["端午节 (단오)"], "JP": [], "overlap": 1}, "2026-06-20": {"KR": [], "CN": ["端午节 (단오)"], "JP": [], "overlap": 1}, "2026-06-21": {"KR": [], "CN": ["端午节 (단오)"], "JP": [], "overlap": 1}, "2026-07-20": {"KR": [], "CN": [], "JP": ["海の日 (바다의 날)"], "overlap": 1}, "2026-08-11": {"KR": [], "CN": [], "JP": ["山の日 (산의 날)"], "overlap": 1}, "2026-08-15": {"KR": ["광복절"], "CN": [], "JP": [], "overlap": 1}, "2026-08-17": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2026-09-21": {"KR": [], "CN": [], "JP": ["敬老の日 (경로의 날)"], "overlap": 1}, "2026-09-22": {"KR": [], "CN": [], "JP": ["国民の休日 (국민의 휴일)"], "overlap": 1}, "2026-09-23": {"KR": [], "CN": [], "JP": ["秋分の日 (추분)"], "overlap": 1}, "2026-09-24": {"KR": ["추석 연휴"], "CN": [], "JP": [], "overlap": 1}, "2026-09-25": {"KR": ["추석 연휴", "추석"], "CN": ["中秋节 (중추절)"], "JP": [], "overlap": 2}, "2026-09-26": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절)"], "JP": [], "overlap": 2}, "2026-09-27": {"KR": [], "CN": ["中秋节 (중추절)"], "JP": [], "overlap": 1}, "2026-10-01": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2026-10-02": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2026-10-03": {"KR": ["개천절"], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 2}, "2026-10-04": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2026-10-05": {"KR": ["대체공휴일"], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 2}, "2026-10-06": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2026-10-07": {"KR": [], "CN": ["国庆节 (국경절)"], "JP": [], "overlap": 1}, "2026-10-09": {"KR": ["한글날"], "CN": [], "JP": [], "overlap": 1}, "2026-10-12": {"KR": [], "CN": [], "JP": ["スポーツの日 (스포츠의 날)"], "overlap": 1}, "2026-11-03": {"KR": [], "CN": [], "JP": ["文化の日 (문화의 날)"], "overlap": 1}, "2026-11-23": {"KR": [], "CN": [], "JP": ["勤労感謝の日 (근로감사의 날)"], "overlap": 1}, "2026-12-25": {"KR": ["성탄절"], "CN": [], "JP": [], "overlap": 1}, "2027-01-01": {"KR": ["신정"], "CN": ["元旦 (신정)"], "JP": ["元日 (신정)"], "overlap": 3}, "2027-01-11": {"KR": [], "CN": [], "JP": ["成人の日 (성년의 날)"], "overlap": 1}, "2027-02-05": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2027-02-06": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2027-02-07": {"KR": ["설날 연휴", "설날"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2027-02-08": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2027-02-09": {"KR": ["대체공휴일"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2027-02-10": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2027-02-11": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": ["建国記念の日 (건국기념일)"], "overlap": 2}, "2027-02-23": {"KR": [], "CN": [], "JP": ["天皇誕生日 (천황탄생일)"], "overlap": 1}, "2027-03-01": {"KR": ["삼일절"], "CN": [], "JP": [], "overlap": 1}, "2027-03-21": {"KR": [], "CN": [], "JP": ["春分の日 (춘분)"], "overlap": 1}, "2027-03-22": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2027-04-04": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2027-04-05": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2027-04-06": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2027-04-29": {"KR": [], "CN": [], "JP": ["昭和の日 (쇼와의 날)"], "overlap": 1}, "2027-05-01": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 1}, "2027-05-02": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 1}, "2027-05-03": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["憲法記念日 (헌법기념일)"], "overlap": 2}, "2027-05-04": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["みどりの日 (녹색의 날)"], "overlap": 2}, "2027-05-05": {"KR": ["어린이날"], "CN": ["劳动节 (노동절·추정)"], "JP": ["こどもの日 (어린이날)"], "overlap": 3}, "2027-05-13": {"KR": ["부처님오신날"], "CN": [], "JP": [], "overlap": 1}, "2027-06-06": {"KR": ["현충일"], "CN": [], "JP": [], "overlap": 1}, "2027-06-09": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2027-06-10": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2027-06-11": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2027-07-19": {"KR": [], "CN": [], "JP": ["海の日 (바다의 날)"], "overlap": 1}, "2027-08-11": {"KR": [], "CN": [], "JP": ["山の日 (산의 날)"], "overlap": 1}, "2027-08-15": {"KR": ["광복절"], "CN": [], "JP": [], "overlap": 1}, "2027-08-16": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2027-09-14": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2027-09-15": {"KR": ["추석 연휴", "추석"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2027-09-16": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2027-09-20": {"KR": [], "CN": [], "JP": ["敬老の日 (경로의 날)"], "overlap": 1}, "2027-09-23": {"KR": [], "CN": [], "JP": ["秋分の日 (추분)"], "overlap": 1}, "2027-10-01": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2027-10-02": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2027-10-03": {"KR": ["개천절"], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 2}, "2027-10-04": {"KR": ["대체공휴일"], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 2}, "2027-10-05": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2027-10-06": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2027-10-07": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2027-10-09": {"KR": ["한글날"], "CN": [], "JP": [], "overlap": 1}, "2027-10-11": {"KR": ["대체공휴일"], "CN": [], "JP": ["スポーツの日 (스포츠의 날)"], "overlap": 2}, "2027-11-03": {"KR": [], "CN": [], "JP": ["文化の日 (문화의 날)"], "overlap": 1}, "2027-11-23": {"KR": [], "CN": [], "JP": ["勤労感謝の日 (근로감사의 날)"], "overlap": 1}, "2027-12-25": {"KR": ["성탄절"], "CN": [], "JP": [], "overlap": 1}, "2027-12-27": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2028-01-01": {"KR": ["신정"], "CN": ["元旦 (신정)"], "JP": ["元日 (신정)"], "overlap": 3}, "2028-01-10": {"KR": [], "CN": [], "JP": ["成人の日 (성년의 날)"], "overlap": 1}, "2028-01-25": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2028-01-26": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2028-01-27": {"KR": ["설날 연휴", "설날"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2028-01-28": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2028-01-29": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2028-01-30": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2028-01-31": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2028-02-11": {"KR": [], "CN": [], "JP": ["建国記念の日 (건국기념일)"], "overlap": 1}, "2028-02-23": {"KR": [], "CN": [], "JP": ["天皇誕生日 (천황탄생일)"], "overlap": 1}, "2028-03-01": {"KR": ["삼일절"], "CN": [], "JP": [], "overlap": 1}, "2028-03-20": {"KR": [], "CN": [], "JP": ["春分の日 (춘분)"], "overlap": 1}, "2028-04-03": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2028-04-04": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2028-04-05": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2028-04-29": {"KR": [], "CN": [], "JP": ["昭和の日 (쇼와의 날)"], "overlap": 1}, "2028-05-01": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 1}, "2028-05-02": {"KR": ["부처님오신날"], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 2}, "2028-05-03": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["憲法記念日 (헌법기념일)"], "overlap": 2}, "2028-05-04": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["みどりの日 (녹색의 날)"], "overlap": 2}, "2028-05-05": {"KR": ["어린이날"], "CN": ["劳动节 (노동절·추정)"], "JP": ["こどもの日 (어린이날)"], "overlap": 3}, "2028-05-28": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2028-05-29": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2028-05-30": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2028-06-06": {"KR": ["현충일"], "CN": [], "JP": [], "overlap": 1}, "2028-07-17": {"KR": [], "CN": [], "JP": ["海の日 (바다의 날)"], "overlap": 1}, "2028-08-11": {"KR": [], "CN": [], "JP": ["山の日 (산의 날)"], "overlap": 1}, "2028-08-15": {"KR": ["광복절"], "CN": [], "JP": [], "overlap": 1}, "2028-09-18": {"KR": [], "CN": [], "JP": ["敬老の日 (경로의 날)"], "overlap": 1}, "2028-09-22": {"KR": [], "CN": [], "JP": ["秋分の日 (추분)"], "overlap": 1}, "2028-10-01": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2028-10-02": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)", "国庆节 (국경절·추정)"], "JP": [], "overlap": 2}, "2028-10-03": {"KR": ["추석 연휴", "추석", "개천절"], "CN": ["中秋节 (중추절·추정)", "国庆节 (국경절·추정)"], "JP": [], "overlap": 2}, "2028-10-04": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)", "国庆节 (국경절·추정)"], "JP": [], "overlap": 2}, "2028-10-05": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2028-10-06": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2028-10-07": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2028-10-09": {"KR": ["한글날"], "CN": [], "JP": ["スポーツの日 (스포츠의 날)"], "overlap": 2}, "2028-11-03": {"KR": [], "CN": [], "JP": ["文化の日 (문화의 날)"], "overlap": 1}, "2028-11-23": {"KR": [], "CN": [], "JP": ["勤労感謝の日 (근로감사의 날)"], "overlap": 1}, "2028-12-25": {"KR": ["성탄절"], "CN": [], "JP": [], "overlap": 1}, "2029-01-01": {"KR": ["신정"], "CN": ["元旦 (신정)"], "JP": ["元日 (신정)"], "overlap": 3}, "2029-01-08": {"KR": [], "CN": [], "JP": ["成人の日 (성년의 날)"], "overlap": 1}, "2029-02-11": {"KR": [], "CN": [], "JP": ["建国記念の日 (건국기념일)"], "overlap": 1}, "2029-02-12": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": ["振替休日 (대체휴일)"], "overlap": 3}, "2029-02-13": {"KR": ["설날 연휴", "설날"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2029-02-14": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2029-02-15": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2029-02-16": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2029-02-17": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2029-02-18": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2029-02-23": {"KR": [], "CN": [], "JP": ["天皇誕生日 (천황탄생일)"], "overlap": 1}, "2029-03-01": {"KR": ["삼일절"], "CN": [], "JP": [], "overlap": 1}, "2029-03-20": {"KR": [], "CN": [], "JP": ["春分の日 (춘분)"], "overlap": 1}, "2029-04-03": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2029-04-04": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2029-04-05": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2029-04-29": {"KR": [], "CN": [], "JP": ["昭和の日 (쇼와의 날)"], "overlap": 1}, "2029-04-30": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2029-05-01": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 1}, "2029-05-02": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 1}, "2029-05-03": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["憲法記念日 (헌법기념일)"], "overlap": 2}, "2029-05-04": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["みどりの日 (녹색의 날)"], "overlap": 2}, "2029-05-05": {"KR": ["어린이날"], "CN": ["劳动节 (노동절·추정)"], "JP": ["こどもの日 (어린이날)"], "overlap": 3}, "2029-05-07": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2029-05-20": {"KR": ["부처님오신날"], "CN": [], "JP": [], "overlap": 1}, "2029-05-21": {"KR": ["대체공휴일"], "CN": [], "JP": [], "overlap": 1}, "2029-06-06": {"KR": ["현충일"], "CN": [], "JP": [], "overlap": 1}, "2029-06-16": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2029-06-17": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2029-06-18": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2029-07-16": {"KR": [], "CN": [], "JP": ["海の日 (바다의 날)"], "overlap": 1}, "2029-08-11": {"KR": [], "CN": [], "JP": ["山の日 (산의 날)"], "overlap": 1}, "2029-08-15": {"KR": ["광복절"], "CN": [], "JP": [], "overlap": 1}, "2029-09-17": {"KR": [], "CN": [], "JP": ["敬老の日 (경로의 날)"], "overlap": 1}, "2029-09-21": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2029-09-22": {"KR": ["추석 연휴", "추석"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2029-09-23": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)"], "JP": ["秋分の日 (추분)"], "overlap": 3}, "2029-09-24": {"KR": ["대체공휴일"], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 2}, "2029-10-01": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2029-10-02": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2029-10-03": {"KR": ["개천절"], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 2}, "2029-10-04": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2029-10-05": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2029-10-06": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2029-10-07": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2029-10-08": {"KR": [], "CN": [], "JP": ["スポーツの日 (스포츠의 날)"], "overlap": 1}, "2029-10-09": {"KR": ["한글날"], "CN": [], "JP": [], "overlap": 1}, "2029-11-03": {"KR": [], "CN": [], "JP": ["文化の日 (문화의 날)"], "overlap": 1}, "2029-11-23": {"KR": [], "CN": [], "JP": ["勤労感謝の日 (근로감사의 날)"], "overlap": 1}, "2029-12-25": {"KR": ["성탄절"], "CN": [], "JP": [], "overlap": 1}, "2030-01-01": {"KR": ["신정"], "CN": ["元旦 (신정)"], "JP": ["元日 (신정)"], "overlap": 3}, "2030-01-14": {"KR": [], "CN": [], "JP": ["成人の日 (성년의 날)"], "overlap": 1}, "2030-02-02": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2030-02-03": {"KR": ["설날 연휴", "설날"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2030-02-04": {"KR": ["설날 연휴"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2030-02-05": {"KR": ["대체공휴일"], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 2}, "2030-02-06": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2030-02-07": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2030-02-08": {"KR": [], "CN": ["春节 (춘절·추정)"], "JP": [], "overlap": 1}, "2030-02-11": {"KR": [], "CN": [], "JP": ["建国記念の日 (건국기념일)"], "overlap": 1}, "2030-02-23": {"KR": [], "CN": [], "JP": ["天皇誕生日 (천황탄생일)"], "overlap": 1}, "2030-03-01": {"KR": ["삼일절"], "CN": [], "JP": [], "overlap": 1}, "2030-03-20": {"KR": [], "CN": [], "JP": ["春分の日 (춘분)"], "overlap": 1}, "2030-04-04": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2030-04-05": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2030-04-06": {"KR": [], "CN": ["清明节 (청명·추정)"], "JP": [], "overlap": 1}, "2030-04-29": {"KR": [], "CN": [], "JP": ["昭和の日 (쇼와의 날)"], "overlap": 1}, "2030-05-01": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 1}, "2030-05-02": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": [], "overlap": 1}, "2030-05-03": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["憲法記念日 (헌법기념일)"], "overlap": 2}, "2030-05-04": {"KR": [], "CN": ["劳动节 (노동절·추정)"], "JP": ["みどりの日 (녹색의 날)"], "overlap": 2}, "2030-05-05": {"KR": ["어린이날"], "CN": ["劳动节 (노동절·추정)"], "JP": ["こどもの日 (어린이날)"], "overlap": 3}, "2030-05-06": {"KR": ["대체공휴일"], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 2}, "2030-05-09": {"KR": ["부처님오신날"], "CN": [], "JP": [], "overlap": 1}, "2030-06-05": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2030-06-06": {"KR": ["현충일"], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 2}, "2030-06-07": {"KR": [], "CN": ["端午节 (단오·추정)"], "JP": [], "overlap": 1}, "2030-07-15": {"KR": [], "CN": [], "JP": ["海の日 (바다의 날)"], "overlap": 1}, "2030-08-11": {"KR": [], "CN": [], "JP": ["山の日 (산의 날)"], "overlap": 1}, "2030-08-12": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2030-08-15": {"KR": ["광복절"], "CN": [], "JP": [], "overlap": 1}, "2030-09-11": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2030-09-12": {"KR": ["추석 연휴", "추석"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2030-09-13": {"KR": ["추석 연휴"], "CN": ["中秋节 (중추절·추정)"], "JP": [], "overlap": 2}, "2030-09-16": {"KR": [], "CN": [], "JP": ["敬老の日 (경로의 날)"], "overlap": 1}, "2030-09-23": {"KR": [], "CN": [], "JP": ["秋分の日 (추분)"], "overlap": 1}, "2030-10-01": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2030-10-02": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2030-10-03": {"KR": ["개천절"], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 2}, "2030-10-04": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2030-10-05": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2030-10-06": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2030-10-07": {"KR": [], "CN": ["国庆节 (국경절·추정)"], "JP": [], "overlap": 1}, "2030-10-09": {"KR": ["한글날"], "CN": [], "JP": [], "overlap": 1}, "2030-10-14": {"KR": [], "CN": [], "JP": ["スポーツの日 (스포츠의 날)"], "overlap": 1}, "2030-11-03": {"KR": [], "CN": [], "JP": ["文化の日 (문화의 날)"], "overlap": 1}, "2030-11-04": {"KR": [], "CN": [], "JP": ["振替休日 (대체휴일)"], "overlap": 1}, "2030-11-23": {"KR": [], "CN": [], "JP": ["勤労感謝の日 (근로감사의 날)"], "overlap": 1}, "2030-12-25": {"KR": ["성탄절"], "CN": [], "JP": [], "overlap": 1}}};
+const DAYS = DB.days;
+const FLAG = {KR:'🇰🇷',CN:'🇨🇳',JP:'🇯🇵'};
+const NAMEK = {KR:'한국',CN:'중국',JP:'일본'};
+let active = {KR:true,CN:true,JP:true};
+let cur = new Date();
+let minY=2025, maxY=2030;
+if(cur.getFullYear()<minY) cur=new Date(minY,0,1);
+if(cur.getFullYear()>maxY) cur=new Date(maxY,11,1);
+const ys=document.getElementById('yearSel');
+function buildYearOptions(){
+  ys.innerHTML='';
+  for(let y=minY;y<=maxY;y++){let o=document.createElement('option');o.value=y;o.textContent=y+'년';ys.appendChild(o);}
+  ys.value=cur.getFullYear();
+}
+buildYearOptions();
+function pad(n){return String(n).padStart(2,'0');}
+function key(y,m,d){return y+'-'+pad(m+1)+'-'+pad(d);}
+function filtered(rec){return ['KR','CN','JP'].filter(c=>rec[c]&&rec[c].length && active[c]);}
+function render(){
+  const y=cur.getFullYear(), m=cur.getMonth();
+  document.getElementById('titleNow').textContent = y+'년 '+(m+1)+'월';
+  ys.value=y;
+  const first=new Date(y,m,1).getDay();
+  const dim=new Date(y,m+1,0).getDate();
+  const days=document.getElementById('days');
+  days.innerHTML='';
+  const today=new Date(); const tkey=key(today.getFullYear(),today.getMonth(),today.getDate());
+  for(let i=0;i<first;i++){let c=document.createElement('div');c.className='cell blank';days.appendChild(c);}
+  for(let dd=1;dd<=dim;dd++){
+    const k=key(y,m,dd);
+    const rec=DAYS[k];
+    const cell=document.createElement('div');
+    cell.className='cell';
+    const dow=new Date(y,m,dd).getDay();
+    if(dow===0)cell.classList.add('sun'); if(dow===6)cell.classList.add('sat');
+    if(k===tkey)cell.classList.add('today');
+    let html='<div class="daynum">'+dd+'</div>';
+    if(rec){
+      const cs=filtered(rec);
+      if(cs.length>=2)cell.classList.add(cs.length>=3?'ov3':'ov2');
+      if(cs.length>0)cell.classList.add('has');
+      html+='<div class="lunar-ribbon">3국 겹침</div><div class="badges">';
+      for(const c of cs){html+='<div class="bd '+c.toLowerCase()+'"><span class="flag">'+FLAG[c]+'</span>'+rec[c][0]+'</div>';}
+      html+='</div>';
+      cell.onclick=()=>showDay(k,rec);
+    }
+    cell.innerHTML=html;
+    days.appendChild(cell);
+  }
+  renderList();
+}
+function showDay(k,rec){
+  const cs=['KR','CN','JP'].filter(c=>rec[c]&&rec[c].length);
+  const lines=cs.map(c=>FLAG[c]+' '+NAMEK[c]+': '+rec[c].join(', '));
+  const dow='일월화수목금토'[new Date(k).getDay()];
+  alert(k+' ('+dow+')\n\n'+lines.join('\n'));
+}
+function renderList(){
+  const y=cur.getFullYear(), m=cur.getMonth();
+  const body=document.getElementById('lstBody'); body.innerHTML='';
+  const keys=Object.keys(DAYS).filter(k=>k.startsWith(y+'-'+pad(m+1))).sort();
+  let rows='';
+  for(const k of keys){
+    const r=DAYS[k]; const cs=filtered(r); if(!cs.length)continue;
+    const dow='일월화수목금토'[new Date(k).getDay()];
+    const ov=cs.length>=3?'<span class="ovtag t3">3국</span>':cs.length===2?'<span class="ovtag t2">2국</span>':'';
+    rows+='<tr><td>'+k.slice(5)+'</td><td>'+dow+'</td><td class="c-kr">'+(active.KR&&r.KR?r.KR.join('<br>'):'')+'</td><td class="c-cn">'+(active.CN&&r.CN?r.CN.join('<br>'):'')+'</td><td class="c-jp">'+(active.JP&&r.JP?r.JP.join('<br>'):'')+'</td><td>'+ov+'</td></tr>';
+  }
+  body.innerHTML = rows || '<tr><td colspan="6" style="color:#999;padding:20px">이 달에는 표시할 공휴일이 없습니다.</td></tr>';
+}
+function renderOverlaps(){
+  const wrap=document.getElementById('ovList');
+  const todayK=new Date().toISOString().slice(0,10);
+  const keys=Object.keys(DAYS).filter(k=>DAYS[k].overlap>=2 && k>=todayK).sort();
+  let groups=[],prev=null,g=null;
+  for(const k of keys){
+    const r=DAYS[k];
+    if(prev && (new Date(k)-new Date(prev))===86400000 && g){g.end=k;g.max=Math.max(g.max,r.overlap);}
+    else{g={start:k,end:k,max:r.overlap};groups.push(g);}
+    prev=k;
+  }
+  let html='';
+  for(const gr of groups.slice(0,40)){
+    const r0=DAYS[gr.start];
+    const cs=['KR','CN','JP'].filter(c=>r0[c]&&r0[c].length);
+    const span = gr.start===gr.end? gr.start : gr.start+' ~ '+gr.end;
+    const names=cs.map(c=>'<span class="mini" style="background:var(--'+c.toLowerCase()+')"></span>'+r0[c][0]).join(' &nbsp; ');
+    const tag=gr.max>=3?'<span class="ovtag t3">3국</span>':'<span class="ovtag t2">2국</span>';
+    html+='<div class="ovitem" onclick="jumpTo(&apos;'+gr.start+'&apos;)"><span class="ovdate">'+span+'</span>'+tag+'<span class="ovnames">'+names+'</span></div>';
+  }
+  wrap.innerHTML = html || '<div style="color:#999;padding:8px">표시할 향후 겹침 일정이 없습니다.</div>';
+}
+function jumpTo(k){const dt=new Date(k);cur=new Date(dt.getFullYear(),dt.getMonth(),1);render();window.scrollTo({top:0,behavior:'smooth'});}
+function move(n){cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);
+  if(cur.getFullYear()<minY)cur=new Date(minY,0,1);
+  if(cur.getFullYear()>maxY)cur=new Date(maxY,11,1);render();}
+function jumpYear(y){cur=new Date(+y,cur.getMonth(),1);render();}
+function goToday(){let t=new Date();if(t.getFullYear()<minY)t=new Date(minY,0,1);if(t.getFullYear()>maxY)t=new Date(maxY,11,1);cur=new Date(t.getFullYear(),t.getMonth(),1);render();}
+function toggle(c,el){active[c]=!active[c];el.classList.toggle('off',!active[c]);render();}
+function setView(v){
+  document.getElementById('calView').style.display=v==='cal'?'':'none';
+  document.getElementById('listView').style.display=v==='list'?'':'none';
+  document.getElementById('tabCal').classList.toggle('active',v==='cal');
+  document.getElementById('tabList').classList.toggle('active',v==='list');
+}
+const NAGER='https://date.nager.at/api/v3/PublicHolidays/';
+function recompAll(){for(const k of Object.keys(DAYS)){const r=DAYS[k];r.overlap=['KR','CN','JP'].filter(c=>r[c]&&r[c].length).length;}}
+function rebuildYears(){
+  let mn=9999,mx=0;
+  for(const k of Object.keys(DAYS)){const y=+k.slice(0,4);if(y<mn)mn=y;if(y>mx)mx=y;}
+  if(mx>0){minY=mn;maxY=mx;buildYearOptions();}
+}
+async function refreshFromWeb(manual){
+  const st=document.getElementById('syncStatus'), btn=document.getElementById('syncBtn');
+  st.className='sync-status busy';st.textContent=manual?'웹에서 가져오는 중…':'라이브 데이터 불러오는 중…';btn.disabled=true;
+  const now=new Date().getFullYear();
+  const years=[];for(let y=Math.min(minY,now-1);y<=Math.max(maxY,now+6);y++)years.push(y);
+  let ok=0;
+  for(const y of years){
+    for(const cc of ['KR','CN','JP']){
+      let arr=null;
+      try{const r=await fetch(NAGER+y+'/'+cc,{cache:'no-store'});if(r.ok)arr=await r.json();}catch(e){}
+      if(!arr)continue;
+      ok++;
+      for(const k of Object.keys(DAYS)){if(k.slice(0,4)===String(y))DAYS[k][cc]=[];}
+      for(const h of arr){
+        const k=h.date;if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(k))continue;
+        if(!DAYS[k])DAYS[k]={KR:[],CN:[],JP:[],overlap:0};
+        const nm=h.localName||h.name;
+        if(DAYS[k][cc].indexOf(nm)===-1)DAYS[k][cc].push(nm);
+      }
+    }
+  }
+  recompAll();
+  btn.disabled=false;
+  if(ok>0){
+    rebuildYears();render();renderOverlaps();
+    st.className='sync-status ok';
+    st.textContent='✅ 라이브 데이터 적용 (Nager.Date) · 범위 '+minY+'–'+maxY+' · '+new Date().toLocaleString('ko-KR');
+  }else{
+    st.className='sync-status warn';
+    st.textContent='📦 라이브 연결 실패 — 내장 데이터(오프라인)로 표시 중입니다.';
+  }
+}
+document.getElementById('metaNote').textContent='오프라인 폴백 데이터: '+DB.meta.generated.slice(0,10)+' 기준 (온라인 시 웹 데이터로 교체)';
+render();renderOverlaps();
+refreshFromWeb(false);
+</script>
+</body>
+</html>
