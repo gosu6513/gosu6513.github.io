@@ -76,6 +76,7 @@ footer{margin-top:30px;color:var(--sub);font-size:12px;line-height:1.7}
 .tab{padding:7px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer}
 .tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 #listView{display:none}
+#calView{touch-action:pan-y}
 table.lst{width:100%;border-collapse:collapse;font-size:13px}
 table.lst th,table.lst td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 table.lst th{background:#fafbfc;position:sticky;top:0;font-size:12px;color:var(--sub)}
@@ -307,7 +308,7 @@ async function refreshFromWeb(manual){
 document.getElementById('metaNote').textContent='오프라인 폴백 데이터: '+DB.meta.generated.slice(0,10)+' 기준 (온라인 시 웹 데이터로 교체)';
 render();renderOverlaps();
 refreshFromWeb(false);
-(function(){var x0=null,y0=null,el=document.getElementById('calView');if(!el)return;el.addEventListener('touchstart',function(e){var t=e.changedTouches[0];x0=t.clientX;y0=t.clientY;},{passive:true});el.addEventListener('touchend',function(e){if(x0===null)return;var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){move(dx<0?1:-1);}x0=null;},{passive:true});})();
+(function(){var el=document.getElementById('calView');if(!el)return;var sx=null,sy=null,down=false;function start(x,y){sx=x;sy=y;down=true;}function end(x,y){if(!down)return;down=false;var dx=x-sx,dy=y-sy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3){move(dx<0?1:-1);}}el.addEventListener('pointerdown',function(e){if(e.pointerType==='mouse'&&e.button!==0)return;start(e.clientX,e.clientY);});window.addEventListener('pointerup',function(e){end(e.clientX,e.clientY);});window.addEventListener('pointercancel',function(){down=false;});var wa=0,wt=null;el.addEventListener('wheel',function(e){if(Math.abs(e.deltaX)>Math.abs(e.deltaY)+2){e.preventDefault();wa+=e.deltaX;clearTimeout(wt);wt=setTimeout(function(){if(Math.abs(wa)>60){move(wa>0?1:-1);}wa=0;},140);}},{passive:false});})();
 </script>
 </body>
 </html>
