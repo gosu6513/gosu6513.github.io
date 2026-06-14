@@ -37,6 +37,7 @@ select{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:9
 .sync-status{font-size:12.5px;color:var(--sub)}
 .sync-status.ok{color:#1a7f37} .sync-status.warn{color:#9a6b00} .sync-status.busy{color:#2f6fed}
 .grid{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.cal-title{padding:12px 0;text-align:center;font-size:16px;font-weight:800;color:var(--ink);border-bottom:1px solid var(--line);background:#fff}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);background:#fafbfc;border-bottom:1px solid var(--line)}
 .dow div{padding:10px 0;text-align:center;font-size:12px;font-weight:700;color:var(--sub)}
 .dow div:first-child{color:var(--kr)} .dow div:last-child{color:var(--jp)}
@@ -135,6 +136,7 @@ table.lst th{background:#fafbfc;position:sticky;top:0;font-size:12px;color:var(-
   </div>
   <div id="calView">
     <div class="grid">
+      <div class="cal-title" id="calTitle"></div>
       <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
       <div class="viewport" id="viewport"><div class="track" id="track"></div></div>
     </div>
@@ -226,7 +228,7 @@ function layoutTrack(){
 }
 function render(){
   var y=cur.getFullYear(), m=cur.getMonth();
-  document.getElementById('titleNow').textContent=y+'년 '+(m+1)+'월';
+  document.getElementById('titleNow').textContent=y+'년 '+(m+1)+'월';var _ct=document.getElementById('calTitle');if(_ct)_ct.textContent=y+'년 '+(m+1)+'월';
   ys.value=y;
   var track=document.getElementById('track');
   track.innerHTML='';
