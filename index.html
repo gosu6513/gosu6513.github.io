@@ -99,7 +99,7 @@ table.lst th{background:#fafbfc;position:sticky;top:0;font-size:12px;color:var(-
 <div class="wrap">
   <header>
     <h1>🗓️ 한·중·일 통합 공휴일 달력</h1>
-    <p>일본 여행 계획용 · 3국 공휴일과 <b>겹침(혼잡 주의)</b> 한눈에 보기</p>
+    <p>일본 여행 계획용 · 3국 공휴일과 <b>겹침(혼잡 주의)</b> 한눈에 보기 · 달력 좌우 스와이프로 월 이동</p>
   </header>
   <div class="toolbar">
     <div class="nav">
@@ -307,6 +307,7 @@ async function refreshFromWeb(manual){
 document.getElementById('metaNote').textContent='오프라인 폴백 데이터: '+DB.meta.generated.slice(0,10)+' 기준 (온라인 시 웹 데이터로 교체)';
 render();renderOverlaps();
 refreshFromWeb(false);
+(function(){var x0=null,y0=null,el=document.getElementById('calView');if(!el)return;el.addEventListener('touchstart',function(e){var t=e.changedTouches[0];x0=t.clientX;y0=t.clientY;},{passive:true});el.addEventListener('touchend',function(e){if(x0===null)return;var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){move(dx<0?1:-1);}x0=null;},{passive:true});})();
 </script>
 </body>
 </html>
