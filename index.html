@@ -260,7 +260,7 @@ function renderOverlaps(){
   wrap.innerHTML = html || '<div style="color:#999;padding:8px">표시할 향후 겹침 일정이 없습니다.</div>';
 }
 function jumpTo(k){const dt=new Date(k);cur=new Date(dt.getFullYear(),dt.getMonth(),1);render();window.scrollTo({top:0,behavior:'smooth'});}
-function move(n){slideDir=n;cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);
+function move(n){if(window.__shift){window.__shift(n,260);return;}cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);
   if(cur.getFullYear()<minY)cur=new Date(minY,0,1);
   if(cur.getFullYear()>maxY)cur=new Date(maxY,11,1);render();}
 function jumpYear(y){cur=new Date(+y,cur.getMonth(),1);render();}
@@ -314,7 +314,69 @@ async function refreshFromWeb(manual){
 document.getElementById('metaNote').textContent='오프라인 폴백 데이터: '+DB.meta.generated.slice(0,10)+' 기준 (온라인 시 웹 데이터로 교체)';
 render();renderOverlaps();
 refreshFromWeb(false);
-(function(){var el=document.getElementById('calView');if(!el)return;var sx=null,sy=null,down=false;function start(x,y){sx=x;sy=y;down=true;}function end(x,y){if(!down)return;down=false;var dx=x-sx,dy=y-sy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3){move(dx<0?1:-1);}}el.addEventListener('pointerdown',function(e){if(e.pointerType==='mouse'&&e.button!==0)return;start(e.clientX,e.clientY);});window.addEventListener('pointerup',function(e){end(e.clientX,e.clientY);});window.addEventListener('pointercancel',function(){down=false;});var wa=0,wt=null;el.addEventListener('wheel',function(e){if(Math.abs(e.deltaX)>Math.abs(e.deltaY)+2){e.preventDefault();wa+=e.deltaX;clearTimeout(wt);wt=setTimeout(function(){if(Math.abs(wa)>60){move(wa>0?1:-1);}wa=0;},140);}},{passive:false});})();
+(function(){
+  var el=document.getElementById('calView'); if(!el) return;
+  var EZ='cubic-bezier(.22,.61,.36,1)';
+  function days(){return document.getElementById('days');}
+  function W(){return days().offsetWidth||el.offsetWidth||320;}
+  var sx=0,sy=0,st=0,drag=false,axis=null,pid=null,animating=false;
+  function canGo(dir){var t=new Date(cur.getFullYear(),cur.getMonth()+dir,1);return t.getFullYear()>=minY&&t.getFullYear()<=maxY;}
+  function snapBack(){var d=days();d.style.transition='transform .2s '+EZ+', opacity .2s ease';d.style.transform='translateX(0)';d.style.opacity='1';}
+  function shift(dir,dur){
+    if(!canGo(dir)){snapBack();return;}
+    animating=true;
+    var d=days(),w=W();
+    dur=Math.min(Math.max(dur||260,110),360);
+    d.style.transition='transform '+dur+'ms '+EZ+', opacity '+dur+'ms ease';
+    d.style.transform='translateX('+(dir>0?-w:w)+'px)';
+    d.style.opacity='0.25';
+    var done=function(){
+      d.removeEventListener('transitionend',done);
+      cur=new Date(cur.getFullYear(),cur.getMonth()+dir,1);
+      if(cur.getFullYear()<minY)cur=new Date(minY,0,1);
+      if(cur.getFullYear()>maxY)cur=new Date(maxY,11,1);
+      render();
+      var nd=days();
+      nd.style.transition='none';
+      nd.style.transform='translateX('+(dir>0?w:-w)+'px)';
+      nd.style.opacity='0.25';
+      void nd.offsetWidth;
+      nd.style.transition='transform '+dur+'ms '+EZ+', opacity '+dur+'ms ease';
+      nd.style.transform='translateX(0)';
+      nd.style.opacity='1';
+      setTimeout(function(){animating=false;},dur);
+    };
+    d.addEventListener('transitionend',done,{once:true});
+  }
+  window.__shift=shift;
+  el.addEventListener('pointerdown',function(e){
+    if(animating)return;
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    sx=e.clientX;sy=e.clientY;st=performance.now();drag=true;axis=null;pid=e.pointerId;
+    days().style.transition='none';
+  });
+  el.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    var dx=e.clientX-sx,dy=e.clientY-sy;
+    if(axis===null){if(Math.abs(dx)>8||Math.abs(dy)>8){axis=Math.abs(dx)>Math.abs(dy)?'x':'y';if(axis==='x'){try{el.setPointerCapture(pid);}catch(_){}}}}
+    if(axis==='x'){var d=days();d.style.transform='translateX('+dx+'px)';d.style.opacity=String(1-Math.min(Math.abs(dx)/700,0.4));}
+  });
+  function endDrag(e){
+    if(!drag)return;drag=false;
+    if(axis!=='x')return;
+    var dx=e.clientX-sx,dt=Math.max(performance.now()-st,1),vel=Math.abs(dx)/dt,w=W();
+    var commit=Math.abs(dx)>w*0.22||vel>0.4;
+    var dir=dx<0?1:-1;
+    if(!commit||!canGo(dir)){snapBack();return;}
+    var remaining=Math.max(w-Math.abs(dx),0);
+    var speed=Math.max(vel,0.6);
+    shift(dir,remaining/speed);
+  }
+  el.addEventListener('pointerup',endDrag);
+  el.addEventListener('pointercancel',function(){if(drag){drag=false;snapBack();}});
+  var wa=0,wt=null;
+  el.addEventListener('wheel',function(e){if(Math.abs(e.deltaX)>Math.abs(e.deltaY)+2){e.preventDefault();wa+=e.deltaX;clearTimeout(wt);wt=setTimeout(function(){if(Math.abs(wa)>60){shift(wa>0?1:-1,230);}wa=0;},120);}},{passive:false});
+})();
 </script>
 </body>
 </html>
