@@ -41,6 +41,10 @@ select{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:9
 .dow div{padding:10px 0;text-align:center;font-size:12px;font-weight:700;color:var(--sub)}
 .dow div:first-child{color:var(--kr)} .dow div:last-child{color:var(--jp)}
 .days{display:grid;grid-template-columns:repeat(7,1fr)}
+.days.anim-r{animation:slideInR .22s ease}
+.days.anim-l{animation:slideInL .22s ease}
+@keyframes slideInR{from{opacity:.25;transform:translateX(36px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInL{from{opacity:.25;transform:translateX(-36px)}to{opacity:1;transform:translateX(0)}}
 .cell{min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
   padding:6px 7px;position:relative;transition:.12s}
 .cell:nth-child(7n){border-right:none}
@@ -165,6 +169,7 @@ const FLAG = {KR:'🇰🇷',CN:'🇨🇳',JP:'🇯🇵'};
 const LET = {KR:'한',CN:'중',JP:'일'};
 const NAMEK = {KR:'한국',CN:'중국',JP:'일본'};
 let active = {KR:true,CN:true,JP:true};
+let slideDir=0;
 let cur = new Date();
 let minY=2025, maxY=2030;
 if(cur.getFullYear()<minY) cur=new Date(minY,0,1);
@@ -210,6 +215,7 @@ function render(){
     cell.innerHTML=html;
     days.appendChild(cell);
   }
+  var _d=document.getElementById('days');_d.classList.remove('anim-r','anim-l');if(slideDir>0){void _d.offsetWidth;_d.classList.add('anim-r');}else if(slideDir<0){void _d.offsetWidth;_d.classList.add('anim-l');}slideDir=0;
   renderList();
 }
 function showDay(k,rec){
@@ -254,7 +260,7 @@ function renderOverlaps(){
   wrap.innerHTML = html || '<div style="color:#999;padding:8px">표시할 향후 겹침 일정이 없습니다.</div>';
 }
 function jumpTo(k){const dt=new Date(k);cur=new Date(dt.getFullYear(),dt.getMonth(),1);render();window.scrollTo({top:0,behavior:'smooth'});}
-function move(n){cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);
+function move(n){slideDir=n;cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);
   if(cur.getFullYear()<minY)cur=new Date(minY,0,1);
   if(cur.getFullYear()>maxY)cur=new Date(maxY,11,1);render();}
 function jumpYear(y){cur=new Date(+y,cur.getMonth(),1);render();}
